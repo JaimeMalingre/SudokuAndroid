@@ -8,8 +8,6 @@ import android.widget.GridLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.sudokuandroid.R;
-
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
@@ -23,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
 
         GridLayout gridLayout = findViewById(R.id.grid);
         Button resetButton = findViewById(R.id.resetButton);
+        Button solveButton = findViewById(R.id.solveButton);
 
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
@@ -34,29 +33,129 @@ public class MainActivity extends AppCompatActivity {
         resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                resetBoard();
+                resetarTablero();
             }
         });
-        resetBoard();
+
+        solveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                resolverTablero();
+            }
+        });
+
+        resetarTablero();
     }
 
-    private void resetBoard() {
+    private void resolverTablero() {
+        // Obtén el tablero actual desde las celdas de la interfaz de usuario
+        int[][] sudokuBoard = getTableroDesdeInterfaz();
+
+        if (resolverSudoku(sudokuBoard)) {
+            // Si se pudo resolver, actualiza la interfaz de usuario con la solución
+            updateUI(sudokuBoard);
+        }
+    }
+
+    private boolean resolverSudoku(int[][] board) {
+        // Encuentra una celda vacía
+        int[] emptyCell = encontrarCeldaVacia(board);
+        int row = emptyCell[0];
+        int col = emptyCell[1];
+
+        // Si no hay celdas vacías, el Sudoku está resuelto
+        if (row == -1 && col == -1) {
+            return true;
+        }
+
+        // Intenta colocar un número del 1 al 9 en la celda vacía
+        for (int num = 1; num <= 9; num++) {
+            if (esNumeroValido(board, row, col, num)) {
+                // Si el número es válido, colócalo en la celda
+                board[row][col] = num;
+
+                // Intenta resolver el resto del tablero recursivamente
+                if (resolverSudoku(board)) {
+                    return true; // La solución se encontró
+                }
+
+                // Si no se puede resolver con este número, retrocede y prueba otro
+                board[row][col] = 0;
+            }
+        }
+
+        // No se encontró una solución con ninguno de los números, retrocede
+        return false;
+    }
+
+    private int[] encontrarCeldaVacia(int[][] board) {
+        int[] result = {-1, -1};
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                if (board[i][j] == 0) {
+                    result[0] = i;
+                    result[1] = j;
+                    return result;
+                }
+            }
+        }
+        return result; // Retorna {-1, -1} si no hay celdas vacías
+    }
+
+    private boolean esNumeroValido(int[][] board, int row, int col, int num) {
+        // Verifica si el número ya está en la fila o columna
+        for (int i = 0; i < 9; i++) {
+            if (board[row][i] == num || board[i][col] == num) {
+                return false;
+            }
+        }
+
+        // Verifica si el número ya está en el bloque 3x3
+        int startRow = row - row % 3;
+        int startCol = col - col % 3;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (board[startRow + i][startCol + j] == num) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private int[][] getTableroDesdeInterfaz() {
+        int[][] sudokuBoard = new int[9][9];
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                String cellValue = sudokuCells[i][j].getText().toString();
+                if (!cellValue.isEmpty()) {
+                    sudokuBoard[i][j] = Integer.parseInt(cellValue);
+                } else {
+                    sudokuBoard[i][j] = 0;
+                }
+            }
+        }
+        return sudokuBoard;
+    }
+
+    private void resetarTablero() {
         int[][] sudokuBoard = new int[9][9];
 
-        // Generate a new Sudoku board
-        generateSudokuBoard(sudokuBoard);
+        // Genera un nuevo tablero de Sudoku
+        nuevoTableroSudoku(sudokuBoard);
 
-        // Remove some numbers to create the puzzle
-        removeNumbersFromBoard(sudokuBoard);
+        // Elimina algunos números para crear el rompecabezas
+        eliminarNumerosTablero(sudokuBoard);
 
-        // Update the UI with the generated puzzle
+        // Actualiza la interfaz de usuario con el rompecabezas generado
         updateUI(sudokuBoard);
     }
 
-    private void removeNumbersFromBoard(int[][] board) {
+    private void eliminarNumerosTablero(int[][] board) {
         Random random = new Random();
         // Ajusta el nivel de dificultad cambiando el número de celdas a eliminar
-        int numeros_eliminar = 30;
+        int numeros_eliminar = 80;
 
         for (int i = 0; i < numeros_eliminar; i++) {
             int row = random.nextInt(9);
@@ -70,18 +169,19 @@ public class MainActivity extends AppCompatActivity {
             for (int j = 0; j < 9; j++) {
                 if (board[i][j] != 0) {
                     sudokuCells[i][j].setText(String.valueOf(board[i][j]));
-                    sudokuCells[i][j].setEnabled(false); // Disable user input for given numbers
+                    sudokuCells[i][j].setEnabled(false); //Deshabilitar la entrada de usuario para los números dados
+
                 } else {
-                    sudokuCells[i][j].setText(""); // Clear text for empty cells
-                    sudokuCells[i][j].setEnabled(true); // Enable user input for empty cells
+                    sudokuCells[i][j].setText("");  //Borrar texto para celdas vacías
+                    sudokuCells[i][j].setEnabled(true); //Habilitar la entrada de usuario para celdas vacías
                 }
             }
         }
     }
 
-    private void generateSudokuBoard(int[][] board) {
-        // Start with a fully solved board
-        //tablero de Sudoku completamente resuelto y luego intercambiar aleatoriamente filas y columnas dentro del mismo bloque 3x3.
+    private void nuevoTableroSudoku(int[][] board) {
+        // Empieza con un tablero completamente resuelto
+        //Tablero de Sudoku completamente resuelto y luego intercambiar aleatoriamente filas y columnas dentro del mismo bloque 3x3.
         //Esto garantizará que el tablero resultante sea también un Sudoku válido. Aquí hay un ejemplo de cómo podrías hacer esto:
         int[][] solvedBoard = {
                 {1, 2, 3, 4, 5, 6, 7, 8, 9},
@@ -97,16 +197,16 @@ public class MainActivity extends AppCompatActivity {
 
         Random random = new Random();
 
-        // Swap rows and columns within the same 3x3 block
+        // Mismas filas y columnas dentro del mismo bloque 3x3
         for (int i = 0; i < 9; i++) {
             int swapWith = i / 3 * 3 + random.nextInt(3);
 
-            // Swap rows
+            // Intercambiar filas
             int[] temp = solvedBoard[i];
             solvedBoard[i] = solvedBoard[swapWith];
             solvedBoard[swapWith] = temp;
 
-            // Swap columns
+            // Intercambiar columnas
             for (int j = 0; j < 9; j++) {
                 int tempNum = solvedBoard[j][i];
                 solvedBoard[j][i] = solvedBoard[j][swapWith];
@@ -114,40 +214,11 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Copy the shuffled board to the input board
+        // Copia el tablero mezclado en el tablero de entrada
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
                 board[i][j] = solvedBoard[i][j];
             }
         }
-    }
-
-    private boolean isValid(int[][] board, int row, int col, int number) {
-        // Check the column
-        for (int i = 0; i < 9; i++) {
-            if (board[i][col] == number) {
-                return false;
-            }
-        }
-
-        // Check the row
-        for (int j = 0; j < 9; j++) {
-            if (board[row][j] == number) {
-                return false;
-            }
-        }
-
-        // Check the box
-        int boxRow = row - row % 3;
-        int boxCol = col - col % 3;
-
-        for (int i = boxRow; i < boxRow + 3; i++) {
-            for (int j = boxCol; j < boxCol + 3; j++) {
-                if (board[i][j] == number) {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 }
