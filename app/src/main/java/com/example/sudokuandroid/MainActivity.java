@@ -13,7 +13,7 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    private EditText[][] sudokuCells = new EditText[9][9];
+    private EditText[][] celdasSudoku = new EditText[9][9];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,24 +21,24 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         GridLayout gridLayout = findViewById(R.id.grid);
-        Button resetButton = findViewById(R.id.resetButton);
-        Button solveButton = findViewById(R.id.solveButton);
+        Button botonReset = findViewById(R.id.resetButton);
+        Button resolverBoton = findViewById(R.id.solveButton);
 
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
-                sudokuCells[i][j] = new EditText(this);
-                gridLayout.addView(sudokuCells[i][j]);
+                celdasSudoku[i][j] = new EditText(this);
+                gridLayout.addView(celdasSudoku[i][j]);
             }
         }
 
-        resetButton.setOnClickListener(new View.OnClickListener() {
+        botonReset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 resetarTablero();
             }
         });
 
-        solveButton.setOnClickListener(new View.OnClickListener() {
+        resolverBoton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 resolverTablero();
@@ -52,43 +52,43 @@ public class MainActivity extends AppCompatActivity {
         // Limpia todas las celdas antes de resolver el Sudoku
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
-                sudokuCells[i][j].setText("");
+                celdasSudoku[i][j].setText("");
             }
         }
 
         // Obtén el tablero actual desde las celdas de la interfaz de usuario
-        int[][] sudokuBoard = getTableroDesdeInterfaz();
+        int[][] sudokuBoard = tablero();
 
         if (resolverSudoku(sudokuBoard)) {
             // Si se pudo resolver, actualiza la interfaz de usuario con la solución
-            updateUI(sudokuBoard);
+            actuaslizarInterfaz(sudokuBoard);
         }
     }
 
-    private boolean resolverSudoku(int[][] board) {
+    private boolean resolverSudoku(int[][] tabla) {
         // Encuentra una celda vacía
-        int[] emptyCell = encontrarCeldaVacia(board);
-        int row = emptyCell[0];
-        int col = emptyCell[1];
+        int[] celdaVacia = encontrarCeldaVacia(tabla);
+        int fila = celdaVacia[0];
+        int columna = celdaVacia[1];
 
         // Si no hay celdas vacías, el Sudoku está resuelto
-        if (row == -1 && col == -1) {
+        if (fila == -1 && columna == -1) {
             return true;
         }
 
         // Intenta colocar un número del 1 al 9 en la celda vacía
         for (int num = 1; num <= 9; num++) {
-            if (esNumeroValido(board, row, col, num)) {
+            if (esNumeroValido(tabla, fila, columna, num)) {
                 // Si el número es válido, colócalo en la celda
-                board[row][col] = num;
+                tabla[fila][columna] = num;
 
                 // Intenta resolver el resto del tablero recursivamente
-                if (resolverSudoku(board)) {
+                if (resolverSudoku(tabla)) {
                     return true; // La solución se encontró
                 }
 
                 // Si no se puede resolver con este número, retrocede y prueba otro
-                board[row][col] = 0;
+                tabla[fila][columna] = 0;
             }
         }
 
@@ -96,34 +96,34 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    private int[] encontrarCeldaVacia(int[][] board) {
-        int[] result = {-1, -1};
+    private int[] encontrarCeldaVacia(int[][] tableroS) {
+        int[] resultado = {-1, -1};
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
-                if (board[i][j] == 0) {
-                    result[0] = i;
-                    result[1] = j;
-                    return result;
+                if (tableroS[i][j] == 0) {
+                    resultado[0] = i;
+                    resultado[1] = j;
+                    return resultado;
                 }
             }
         }
-        return result; // Retorna {-1, -1} si no hay celdas vacías
+        return resultado; // Devuelve si no hay celdas vacías
     }
 
-    private boolean esNumeroValido(int[][] board, int row, int col, int num) {
+    private boolean esNumeroValido(int[][] board, int fila, int columna, int num) {
         // Verifica si el número ya está en la fila o columna
         for (int i = 0; i < 9; i++) {
-            if (board[row][i] == num || board[i][col] == num) {
+            if (board[fila][i] == num || board[i][columna] == num) {
                 return false;
             }
         }
 
         // Verifica si el número ya está en el bloque 3x3
-        int startRow = row - row % 3;
-        int startCol = col - col % 3;
+        int empezarFila = fila - fila % 3;
+        int empezarColumna = columna - columna % 3;
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                if (board[startRow + i][startCol + j] == num) {
+                if (board[empezarFila + i][empezarColumna + j] == num) {
                     return false;
                 }
             }
@@ -133,13 +133,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private int[][] getTableroDesdeInterfaz() {
+    private int[][] tablero() {
         int[][] sudokuBoard = new int[9][9];
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
-                String cellValue = sudokuCells[i][j].getText().toString();
-                if (!cellValue.isEmpty()) {
-                    sudokuBoard[i][j] = Integer.parseInt(cellValue);
+                String celda = celdasSudoku[i][j].getText().toString();
+                if (!celda.isEmpty()) {
+                    sudokuBoard[i][j] = Integer.parseInt(celda);
                 } else {
                     sudokuBoard[i][j] = 0;
                 }
@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
         eliminarNumerosTablero(sudokuBoard);
 
         // Actualiza la interfaz de usuario con el rompecabezas generado
-        updateUI(sudokuBoard);
+        actuaslizarInterfaz(sudokuBoard);
     }
 
     private void eliminarNumerosTablero(int[][] board) {
@@ -173,20 +173,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateUI(int[][] board) {
+    private void actuaslizarInterfaz(int[][] tableroSudoku) {
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
-                if (board[i][j] != 0) {
-                    sudokuCells[i][j].setText(String.valueOf(board[i][j]));
-                    sudokuCells[i][j].setEnabled(false);
+                if (tableroSudoku[i][j] != 0) {
+                    celdasSudoku[i][j].setText(String.valueOf(tableroSudoku[i][j]));
+                    celdasSudoku[i][j].setEnabled(false);
                     // Cambia el color de los números generados aleatoriamente a gris
-                    sudokuCells[i][j].setTextColor(Color.BLACK);
+                    celdasSudoku[i][j].setTextColor(Color.BLACK);
 
                 } else {
-                    sudokuCells[i][j].setText("");
-                    sudokuCells[i][j].setEnabled(true);
+                    celdasSudoku[i][j].setText("");
+                    celdasSudoku[i][j].setEnabled(true);
                     // Deja el color de los números introducidos por el usuario en negro
-                    sudokuCells[i][j].setTextColor(Color.GRAY);
+                    celdasSudoku[i][j].setTextColor(Color.GRAY);
                 }
             }
         }
