@@ -49,13 +49,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void resolverTablero() {
-        // Limpia todas las celdas antes de resolver el Sudoku
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                celdasSudoku[i][j].setText("");
-            }
-        }
-
         // Obtén el tablero actual desde las celdas de la interfaz de usuario
         int[][] sudokuBoard = tablero();
 
