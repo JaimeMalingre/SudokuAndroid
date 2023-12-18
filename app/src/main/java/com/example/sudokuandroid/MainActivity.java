@@ -1,5 +1,6 @@
 package com.example.sudokuandroid;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -124,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+
     private int[][] getTableroDesdeInterfaz() {
         int[][] sudokuBoard = new int[9][9];
         for (int i = 0; i < 9; i++) {
@@ -155,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
     private void eliminarNumerosTablero(int[][] board) {
         Random random = new Random();
         // Ajusta el nivel de dificultad cambiando el número de celdas a eliminar
-        int numeros_eliminar = 80;
+        int numeros_eliminar = 40;
 
         for (int i = 0; i < numeros_eliminar; i++) {
             int row = random.nextInt(9);
@@ -169,11 +171,15 @@ public class MainActivity extends AppCompatActivity {
             for (int j = 0; j < 9; j++) {
                 if (board[i][j] != 0) {
                     sudokuCells[i][j].setText(String.valueOf(board[i][j]));
-                    sudokuCells[i][j].setEnabled(false); //Deshabilitar la entrada de usuario para los números dados
+                    sudokuCells[i][j].setEnabled(false);
+                    // Cambia el color de los números generados aleatoriamente a gris
+                    sudokuCells[i][j].setTextColor(Color.BLACK);
 
                 } else {
-                    sudokuCells[i][j].setText("");  //Borrar texto para celdas vacías
-                    sudokuCells[i][j].setEnabled(true); //Habilitar la entrada de usuario para celdas vacías
+                    sudokuCells[i][j].setText("");
+                    sudokuCells[i][j].setEnabled(true);
+                    // Deja el color de los números introducidos por el usuario en negro
+                    sudokuCells[i][j].setTextColor(Color.GRAY);
                 }
             }
         }
