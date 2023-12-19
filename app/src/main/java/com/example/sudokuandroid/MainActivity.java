@@ -14,6 +14,7 @@ import java.util.Random;
 public class MainActivity extends AppCompatActivity {
 
     private EditText[][] celdasSudoku = new EditText[9][9];
+    private EditText celdaSeleccionada = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,14 +23,29 @@ public class MainActivity extends AppCompatActivity {
 
         GridLayout gridLayout = findViewById(R.id.grid);
         Button botonReset = findViewById(R.id.resetButton);
-        Button resolverBoton = findViewById(R.id.solveButton);
+        Button botonComprobar = findViewById(R.id.checkButton);
 
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
                 celdasSudoku[i][j] = new EditText(this);
+                final int finalI = i;
+                final int finalJ = j;
+                celdasSudoku[i][j].setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        celdaSeleccionada = celdasSudoku[finalI][finalJ]; // Actualiza la celda seleccionada cuando se hace clic en una celda
+                    }
+                });
                 gridLayout.addView(celdasSudoku[i][j]);
             }
         }
+
+        botonComprobar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                comprobarCelda(); // Llama a la función de comprobación cuando se presiona el botón de comprobación
+            }
+        });
 
         botonReset.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -38,27 +54,30 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        resolverBoton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                resolverTablero();
-            }
-        });
 
         resetarTablero();
     }
 
-    private void resolverTablero() {
-        // Obtén el tablero actual desde las celdas de la interfaz de usuario
-        int[][] sudokuBoard = tablero();
-
-        if (resolverSudoku(sudokuBoard)) {
-            // Si se pudo resolver, actualiza la interfaz de usuario con la solución
-            actuaslizarInterfaz(sudokuBoard);
+    // Comprueba si el número introducido por el usuario es válido
+    private void comprobarCelda() {
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                String celda = celdasSudoku[i][j].getText().toString();
+                if (!celda.isEmpty()) {
+                    int num = Integer.parseInt(celda);
+                    if (esNumeroValido(tablero(), i, j, num)) {
+                        celdasSudoku[i][j].setTextColor(Color.RED); // Cambia el color a negro si el número es correcto
+                        celdasSudoku[i][j].setEnabled(false); // Deshabilita la celda si el número es correcto
+                    } else {
+                        celdasSudoku[i][j].setTextColor(Color.GREEN); // Cambia el color a rojo si el número es incorrecto
+                    }
+                }
+            }
         }
     }
 
-    private boolean resolverSudoku(int[][] tabla) {
+
+    public boolean resolverSudoku(int[][] tabla) {
         // Encuentra una celda vacía
         int[] celdaVacia = encontrarCeldaVacia(tabla);
         int fila = celdaVacia[0];
@@ -67,6 +86,17 @@ public class MainActivity extends AppCompatActivity {
         // Si no hay celdas vacías, el Sudoku está resuelto
         if (fila == -1 && columna == -1) {
             return true;
+        }
+
+        // Si la celda ya tiene un número, verifica si es válido
+        if (tabla[fila][columna] != 0) {
+            if (esNumeroValido(tabla, fila, columna, tabla[fila][columna])) {
+                // Si el número es válido, continúa con la siguiente celda
+                return resolverSudoku(tabla);
+            } else {
+                // Si el número no es válido, no se puede resolver el Sudoku
+                return false;
+            }
         }
 
         // Intenta colocar un número del 1 al 9 en la celda vacía
@@ -84,7 +114,6 @@ public class MainActivity extends AppCompatActivity {
                 tabla[fila][columna] = 0;
             }
         }
-
         // No se encontró una solución con ninguno de los números, retrocede
         return false;
     }
@@ -157,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
     private void eliminarNumerosTablero(int[][] board) {
         Random random = new Random();
         // Ajusta el nivel de dificultad cambiando el número de celdas a eliminar
-        int numeros_eliminar = 40;
+        int numeros_eliminar = 20;
 
         for (int i = 0; i < numeros_eliminar; i++) {
             int row = random.nextInt(9);
